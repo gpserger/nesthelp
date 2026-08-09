@@ -61,17 +61,19 @@
     border-bottom: 1px solid var(--line); padding-bottom: .3rem;
   }
   #reference .cols {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+    display: grid; grid-template-columns: 1fr 1fr;
     gap: .2rem 2.5rem; margin-top: .6rem;
   }
-  .ph { display: flex; justify-content: space-between; gap: 1rem;
-        padding: .28rem 0; font-size: .95rem; }
+  @media (max-width: 70rem) {
+    #reference .cols { grid-template-columns: 1fr; }
+  }
+  .ph { display: flex; justify-content: space-between; align-items: baseline;
+        gap: 1rem; padding: .28rem 0; font-size: .95rem; }
   .ph code {
     color: var(--fg); background: var(--panel); border-radius: 4px;
-    padding: .1rem .45rem; white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis;
+    padding: .1rem .45rem;
   }
-  .ph span { color: var(--dim); text-align: right; white-space: nowrap; }
+  .ph span { color: var(--dim); text-align: right; flex-shrink: 0; }
   #reference .rules { color: var(--dim); font-size: .9rem; margin-top: .8rem;
                       line-height: 1.5; }
   #reference .rules b { color: var(--accent); font-weight: normal; }
