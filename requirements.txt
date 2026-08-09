@@ -1,0 +1,5 @@
+# Mirrors pyproject.toml for pip users; prefer `uv run main.py`.
+vosk>=0.3.45
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sounddevice>=0.5; sys_platform != "linux"

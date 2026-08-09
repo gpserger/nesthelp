@@ -1,0 +1,72 @@
+# NESTHELP configuration
+
+[server]
+host = "127.0.0.1"
+port = 8737
+
+[ballistics]
+# Verified in-game 2026-08-08: elevation_deg = deg_per_km * distance_km / charges
+deg_per_km = 12.0
+max_elevation_deg = 60.0
+max_charges = 6
+
+[charges]
+# "max" = always the most charges (lowest elevation, fastest reload cycle),
+# or a number 1-6. Voice: "charges four" per mission, "default charges three"
+# to change for the session.
+default = "max"
+
+[blast]
+# Fraction of the blast radius that must overlap the aim point for the
+# elevation tolerance window. Lower (e.g. 0.75) if edge-of-blast hits
+# don't reliably kill.
+margin = 1.0
+# Shell assumed when a mission doesn't name one ("" = none, no tolerance
+# shown). Voice: "default shell hotel echo" / "default shell none".
+default_shell = ""
+
+[speech]
+model_dir = "models/vosk-model-small-en-us-0.15"
+# Extra wake prefix required before every command, e.g. "computer".
+# "" accepts commands directly ("fire mission ...", "target three destroyed").
+prefix = ""
+sample_rate = 16000
+
+# Blast diameters are by-eye measurements (2026-08-08) — refine as you learn
+# better numbers. Aliases are what you SAY; add any words you find natural
+# (they are matched as whole spoken phrases).
+[[shells]]
+name = "LE"
+aliases = ["lima echo"]
+blast_diameter_km = 0.09
+
+[[shells]]
+name = "AP"
+aliases = ["alpha papa", "armor piercing"]
+blast_diameter_km = 0.09
+
+[[shells]]
+name = "HE"
+aliases = ["hotel echo", "high explosive"]
+blast_diameter_km = 0.23
+
+[[shells]]
+name = "APHE"
+aliases = ["alpha papa hotel echo"]
+blast_diameter_km = 0.23
+
+[[shells]]
+name = "HCHE"
+aliases = ["hotel charlie hotel echo", "high capacity"]
+blast_diameter_km = 0.48
+
+[[shells]]
+name = "EQKE"
+aliases = ["echo quebec kilo echo", "earthquake"]
+blast_diameter_km = 0.48
+
+[[shells]]
+# "fletcher" stands in for flechette — the speech model doesn't know "flechette"
+name = "FLCH"
+aliases = ["foxtrot lima charlie hotel", "fletcher"]
+blast_diameter_km = 0.61

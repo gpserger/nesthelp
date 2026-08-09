@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NESTHELP — Fire Direction Board</title>
+<style>
+  :root {
+    --bg: #0d1014; --panel: #151a21; --line: #232b36;
+    --fg: #e8e4d8; --dim: #7d8899; --accent: #ffb454;
+    --ok: #7fd962; --err: #f26d78;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); min-height: 100vh;
+    font-family: "DejaVu Sans Mono", ui-monospace, Menlo, Consolas, monospace;
+    padding: 1.2rem 1.6rem;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    border-bottom: 2px solid var(--accent); padding-bottom: .6rem;
+  }
+  h1 { font-size: 1.15rem; letter-spacing: .18em; color: var(--accent); }
+  #conn { width: .65rem; height: .65rem; border-radius: 50%;
+          background: var(--err); align-self: center; }
+  #conn.up { background: var(--ok); }
+  #defaults { margin-left: auto; color: var(--dim); font-size: .95rem; }
+  #heard {
+    margin: .7rem 0; padding: .5rem .8rem; border-radius: 6px;
+    background: var(--panel); border-left: 4px solid var(--dim);
+    font-size: 1rem; min-height: 2.4rem; color: var(--dim);
+  }
+  #heard.ok  { border-left-color: var(--ok);  color: var(--fg); }
+  #heard.err { border-left-color: var(--err); color: var(--fg); }
+  #heard .msg { color: var(--dim); margin-left: .8rem; }
+  #heard.err .msg { color: var(--err); }
+  table { width: 100%; border-collapse: collapse; margin-top: .4rem; }
+  th {
+    text-align: left; color: var(--dim); font-size: .8rem;
+    letter-spacing: .14em; padding: .4rem .6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  td { padding: .55rem .6rem; border-bottom: 1px solid var(--line);
+       font-size: 1.9rem; white-space: nowrap; }
+  td.small, td .sub { font-size: .95rem; color: var(--dim); }
+  tr.latest td { background: rgba(255, 180, 84, .07); }
+  tr.latest td:first-child { border-left: 4px solid var(--accent); }
+  tr.destroyed td { opacity: .35; text-decoration: line-through; }
+  .tid { color: var(--accent); font-weight: bold; }
+  .elev { font-weight: bold; }
+  .tol { font-size: 1rem; color: var(--ok); display: block; }
+  .bump { color: var(--err); font-size: .85rem; display: block;
+          text-decoration: none; }
+  .shell-tag {
+    font-size: 1rem; border: 1px solid var(--line); border-radius: 4px;
+    padding: .15rem .5rem; color: var(--dim);
+  }
+  #reference { margin-top: 1.4rem; }
+  #reference h2 {
+    color: var(--dim); font-size: .8rem; letter-spacing: .18em;
+    border-bottom: 1px solid var(--line); padding-bottom: .3rem;
+  }
+  #reference .cols {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+    gap: .2rem 2.5rem; margin-top: .6rem;
+  }
+  .ph { display: flex; justify-content: space-between; gap: 1rem;
+        padding: .28rem 0; font-size: .95rem; }
+  .ph code {
+    color: var(--fg); background: var(--panel); border-radius: 4px;
+    padding: .1rem .45rem; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ph span { color: var(--dim); text-align: right; white-space: nowrap; }
+  #reference .rules { color: var(--dim); font-size: .9rem; margin-top: .8rem;
+                      line-height: 1.5; }
+  #reference .rules b { color: var(--accent); font-weight: normal; }
+</style>
+</head>
+<body>
+  <header>
+    <div id="conn" title="connection"></div>
+    <h1>NESTHELP — FIRE DIRECTION</h1>
+    <div id="defaults"></div>
+  </header>
+  <div id="heard">waiting for first command…</div>
+  <table>
+    <thead>
+      <tr><th>TGT</th><th>BEARING</th><th>DISTANCE</th><th>CHG</th>
+          <th>ELEVATION</th><th>SHELL</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="reference">
+    <h2>WHAT YOU CAN SAY</h2>
+    <div class="cols">
+      <div class="ph"><code>fire mission bearing nine six six distance five eight four</code><span>new target: 96.6° at 5.84 km</span></div>
+      <div class="ph"><code>… charges four</code><span>override charge count</span></div>
+      <div class="ph"><code>… shell hotel echo</code><span>attach shell → elevation window</span></div>
+      <div class="ph"><code>… bearing nine six six reverse …</code><span>you measured target→gun; flip 180°</span></div>
+      <div class="ph"><code>target three destroyed</code><span>strike it through</span></div>
+      <div class="ph"><code>delete target three</code><span>remove a mishear</span></div>
+      <div class="ph"><code>target three charges four</code><span>edit; elevation recomputes</span></div>
+      <div class="ph"><code>target three bearing one two four seven</code><span>fix a bearing (124.7°)</span></div>
+      <div class="ph"><code>target three reverse</code><span>flip its bearing 180°</span></div>
+      <div class="ph"><code>target three shell none</code><span>remove its shell</span></div>
+      <div class="ph"><code>clear the board</code><span>wipe everything</span></div>
+      <div class="ph"><code>default charges three</code><span>session default</span></div>
+      <div class="ph"><code>default shell earthquake</code><span>session default shell</span></div>
+    </div>
+    <div class="rules">
+      Speak digits singly (<b>niner</b> = 9, <b>oh</b> = 0).
+      <b>Bearing</b>: last digit is tenths — <b>nine six six</b> = 96.6°,
+      whole degrees need a trailing zero: <b>two four five zero</b> = 245.0°.
+      <b>Distance</b>: km, last two digits are decimals — <b>five eight four</b> = 5.84 km,
+      12.50 km = <b>one two five zero</b>.
+      Shells: <b>lima echo</b> · <b>alpha papa</b> · <b>hotel echo</b> ·
+      <b>alpha papa hotel echo</b> · <b>hotel charlie hotel echo</b> /
+      <b>high capacity</b> · <b>earthquake</b> · <b>fletcher</b>.
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function fmtBearing(b) {
+  const [whole, tenths] = b.toFixed(1).split(".");
+  return whole.padStart(3, "0") + (tenths === "0" ? "" : "." + tenths) + "°";
+}
+
+function render(st) {
+  const d = st.defaults;
+  $("defaults").textContent =
+    `CHG default: ${String(d.charges).toUpperCase()} · ` +
+    `SHELL default: ${d.shell || "—"} · MAX ${st.max_range_km} km`;
+
+  const h = st.last_heard;
+  const heard = $("heard");
+  if (h) {
+    heard.className = h.ok ? "ok" : "err";
+    heard.innerHTML = `${h.ok ? "✓" : "✗"} “${h.text}”` +
+                      `<span class="msg">${h.msg}</span>`;
+  }
+
+  const rows = $("rows");
+  rows.innerHTML = "";
+  const active = st.targets.filter(t => t.status === "active");
+  const latestId = active.length ? active[active.length - 1].id : null;
+  for (const t of st.targets) {
+    const tr = document.createElement("tr");
+    tr.className = (t.status === "destroyed" ? "destroyed " : "") +
+                   (t.id === latestId ? "latest" : "");
+    const km = (t.distance_m / 1000).toFixed(2);
+    let elev = `<span class="elev">${t.elevation_deg.toFixed(2)}°</span>`;
+    if (t.tolerance_deg != null) {
+      const lo = (t.elevation_deg - t.tolerance_deg).toFixed(2);
+      const hi = (t.elevation_deg + t.tolerance_deg).toFixed(2);
+      elev += `<span class="tol">±${t.tolerance_deg.toFixed(2)} → ${lo}–${hi}</span>`;
+    }
+    if (t.charges_bumped)
+      elev += `<span class="bump">charges raised to reach</span>`;
+    tr.innerHTML =
+      `<td class="tid">${t.id}</td>` +
+      `<td>${fmtBearing(t.bearing_deg)}</td>` +
+      `<td>${km} km<div class="sub">${t.distance_m} m</div></td>` +
+      `<td>${t.charges}<span class="sub">/${st.max_charges}</span></td>` +
+      `<td>${elev}</td>` +
+      `<td>${t.shell ? `<span class="shell-tag">${t.shell}</span>` : ""}</td>`;
+    rows.appendChild(tr);
+  }
+}
+
+function connect() {
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => $("conn").classList.add("up");
+  ws.onmessage = ev => render(JSON.parse(ev.data));
+  ws.onclose = () => {
+    $("conn").classList.remove("up");
+    setTimeout(connect, 1500);
+  };
+}
+connect();
+</script>
+</body>
+</html>

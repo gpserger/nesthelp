@@ -1,0 +1,17 @@
+[project]
+name = "nesthelp"
+version = "1.0.0"
+description = "Voice-controlled fire direction board for IRON NEST: Heavy Turret Simulator"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "vosk>=0.3.45",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    # Linux captures the mic with pw-record/parec; everywhere else uses PortAudio
+    "sounddevice>=0.5; sys_platform != 'linux'",
+]
+
+[tool.uv]
+# Flat scripts run in place; nothing to build or install.
+package = false
